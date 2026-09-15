@@ -24,9 +24,10 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 모바일 기기 서명 터치 시 스크롤 방지 */
+        /* 모바일 기기 서명 터치 시 스크롤 방지 및 투명 배경 유지 */
         #signaturePad {
             touch-action: none;
+            background-color: #ffffff; /* 사용자 화면 표시는 흰색 */
         }
         canvas.empty { border-color: #ef4444; }
     </style>
@@ -118,14 +119,13 @@
         let lastX = 0;
         let lastY = 0;
 
+        // 투명 배경을 유지하도록 캔버스 초기화 (fillRect로 흰색을 채우지 않음)
         function resizeCanvas() {
             const rect = canvas.parentElement.getBoundingClientRect();
             canvas.width = rect.width;
             canvas.height = 200;
             
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.lineWidth = 3;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
@@ -183,8 +183,7 @@
         }
 
         clearBtn.addEventListener('click', () => {
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             hasSignature = false;
         });
 
@@ -219,46 +218,40 @@
             }
         });
 
-        function getCompressedSignatureImage() {
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = canvas.height;
-            const tempCtx = tempCanvas.getContext('2d');
-            
-            tempCtx.fillStyle = '#ffffff';
-            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-            tempCtx.drawImage(canvas, 0, 0);
-            
-            return tempCanvas.toDataURL('image/jpeg', 0.7);
+        // 알파 채널(투명 배경)을 포함한 PNG 추출
+        function getTransparentSignatureImage() {
+            return canvas.toDataURL('image/png');
         }
 
         /**
-         * [신규 기능] 계약서 2페이지 원본 이미지에 서명을 좌표 합성(Embedding)하는 함수
+         * [위치 및 크기 정밀 수정] 광고주 상호명/대표자 오른쪽 끝 2개 박스 위로 서명을 투명 오버레이하는 로직
          */
         function createSignedContractPage2(page2Url, signatureBase64) {
             return new Promise((resolve, reject) => {
                 const imgPage2 = new Image();
-                imgPage2.crossOrigin = 'Anonymous'; // CORS 허용
+                imgPage2.crossOrigin = 'Anonymous';
                 imgPage2.onload = () => {
                     const tempCanvas = document.createElement('canvas');
                     tempCanvas.width = imgPage2.width;
                     tempCanvas.height = imgPage2.height;
                     const tempCtx = tempCanvas.getContext('2d');
 
-                    // 1. 2페이지 배경 원본 이미지 그리기
+                    // 1. 2페이지 계약서 원본 배경 그리
                     tempCtx.drawImage(imgPage2, 0, 0);
 
-                    // 2. 고객 서명 이미지 덮어쓰기
+                    // 2. 투명 서명 이미지를 광고주 서명 영역 박스에 맞게 합성
                     const imgSig = new Image();
                     imgSig.onload = () => {
-                        // [서명 위치 및 크기 설정] (계약서 2페이지 하단 광고주 대표자 서명란 좌표 기준)
-                        const sigWidth = imgPage2.width * 0.28;   // 서명 너비 (2페이지 전체의 28%)
-                        const sigHeight = sigWidth * (canvas.height / canvas.width); // 비율 유지
-                        const sigX = imgPage2.width * 0.58;       // 서명 X 위치 (우측 서명란 위치)
-                        const sigY = imgPage2.height * 0.76;      // 서명 Y 위치 (하단 서명란 위치)
+                        // 서명 크기 조정 (광고주 오른쪽 사인 박스 너비에 맞춤)
+                        const sigWidth = imgPage2.width * 0.16;   // 서명 너비 (페이지의 16%)
+                        const sigHeight = sigWidth * (canvas.height / canvas.width); // 가로세로 비율 유지
+                        
+                        // 서명 위치 지정 (광고주 상호명/대표자 오른쪽 끝 2개 박스 영역 좌표)
+                        const sigX = imgPage2.width * 0.385;      // 가로 위치: 광고주 박스 우측 영역
+                        const sigY = imgPage2.height * 0.762;     // 세로 위치: 상호명/대표자 위아래 2개 박스 중앙
 
                         tempCtx.drawImage(imgSig, sigX, sigY, sigWidth, sigHeight);
-                        resolve(tempCanvas.toDataURL('image/jpeg', 0.85));
+                        resolve(tempCanvas.toDataURL('image/jpeg', 0.9));
                     };
                     imgSig.onerror = reject;
                     imgSig.src = signatureBase64;
@@ -292,9 +285,9 @@
 
             try {
                 const page2Url = "https://rawcdn.githack.com/ADplanters/public/f41e9fafa62fa6823274d02b21e458a7f256d7d4/Noah&AP%20contract_002_v2.jpg?raw=true";
-                const signatureImageBase64 = getCompressedSignatureImage();
+                const signatureImageBase64 = getTransparentSignatureImage();
                 
-                // 2페이지 이미지와 서명 합성 실행
+                // 광고주 박스 위치로 투명 서명 합성 실행
                 const signedPage2Base64 = await createSignedContractPage2(page2Url, signatureImageBase64);
 
                 const payload = {
@@ -305,7 +298,7 @@
                     customerEmail: customerEmailValue,
                     agreed: isAgreed,
                     signatureImage: signatureImageBase64,
-                    signedPage2Image: signedPage2Base64, // 합성 완료된 2페이지 이미지 전송
+                    signedPage2Image: signedPage2Base64,
                     submittedAt: new Date().toISOString()
                 };
 

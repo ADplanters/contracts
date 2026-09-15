@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 
 export default async function handler(req, res) {
-    // 1. CORS 보안 설정
+    // 1. CORS 보안 헤더 설정
     const allowedOrigin = 'https://contract.adplanters.com';
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
@@ -23,7 +23,7 @@ export default async function handler(req, res) {
             return res.status(400).json({ message: '필수 데이터가 누락되었습니다.' });
         }
 
-        // 2. 메일 전송 객체 설정
+        // 2. 메일 전송 객체 구성
         const transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST || 'smtp.gmail.com',
             port: Number(process.env.SMTP_PORT) || 587,
@@ -34,17 +34,16 @@ export default async function handler(req, res) {
             }
         });
 
-        // 3. 첨부파일 및 CID 인라인 이미지 구성을 위한 배열
+        // 3. 첨부파일 목록 (투명 PNG 서명 원본 + 합성 완료된 2페이지 파일)
         const attachments = [
             {
-                filename: 'customer_signature.jpg',
+                filename: 'customer_signature.png',
                 content: signatureImage.split('base64,')[1],
                 encoding: 'base64',
-                contentType: 'image/jpeg'
+                contentType: 'image/png'
             }
         ];
 
-        // 서명 합성된 2페이지 이미지가 존재할 경우 인라인 CID 및 첨부파일 추가
         let signedPage2Html = '';
         if (signedPage2Image) {
             attachments.push({
@@ -52,7 +51,7 @@ export default async function handler(req, res) {
                 content: signedPage2Image.split('base64,')[1],
                 encoding: 'base64',
                 contentType: 'image/jpeg',
-                cid: 'signedPage2Img' // 메일 본문에 임베드할 CID 식별자
+                cid: 'signedPage2Img'
             });
 
             signedPage2Html = `
@@ -80,7 +79,6 @@ export default async function handler(req, res) {
                         <p style="margin: 5px 0; font-size: 14px; color: #4b5563;"><strong>수신 이메일:</strong> ${customerEmail}</p>
                     </div>
 
-                    <!-- 이메일 본문 내 서명 완료된 2페이지 미리보기 이미지 임베드 -->
                     ${signedPage2Html}
                     
                     <div style="margin-top: 25px;">
@@ -98,9 +96,7 @@ export default async function handler(req, res) {
             attachments: attachments
         };
 
-        // 5. 이메일 실제 발송 수행
         await transporter.sendMail(mailOptions);
-
         return res.status(200).json({ success: true, message: '이메일 발송 완료' });
 
     } catch (error) {
