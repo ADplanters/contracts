@@ -222,7 +222,7 @@
         }
 
         /**
-         * [좌표 재조정] 서명을 빨간색 박스 위치(광고주 상호명/대표자 오른쪽 빈 영역) 내부로 이동
+         * [좌표 정밀 보정] 광고주 표 내부 빈 박스(상호명/대표자 오른쪽 빈 칸)에 서명을 정확히 맞추는 위치 계산
          */
         function createSignedContractPage2(page2Url, signatureBase64) {
             return new Promise((resolve, reject) => {
@@ -237,16 +237,16 @@
                     // 1. 2페이지 계약서 원본 배경 그리기
                     tempCtx.drawImage(imgPage2, 0, 0);
 
-                    // 2. 서명 이미지를 빨간색 박스 위치로 맞춰 합성
+                    // 2. 투명 서명을 표 내부 박스 위치로 합성
                     const imgSig = new Image();
                     imgSig.onload = () => {
-                        // 박스 크기에 정밀 정렬하기 위한 너비 조정
-                        const sigWidth = imgPage2.width * 0.125;  // 박스 내부 가로 크기 (12.5%)
-                        const sigHeight = sigWidth * (canvas.height / canvas.width); // 비율 유지
+                        // 박스 가로 너비에 맞게 크기 축소 (전체 이미지의 9%)
+                        const sigWidth = imgPage2.width * 0.09; 
+                        const sigHeight = sigWidth * (canvas.height / canvas.width);
                         
-                        // 빨간색 박스 위치 좌표 (세로 위치를 0.762에서 0.812로 이동)
-                        const sigX = imgPage2.width * 0.358;      // 광고주 상호명/대표자 오른쪽 서명란 박스 X 좌표
-                        const sigY = imgPage2.height * 0.812;     // 상호명/대표자 2개 행을 안착시키는 Y 좌표
+                        // Y축을 0.868로 조정하여 표 하단 서명란 박스 내부에 배치
+                        const sigX = imgPage2.width * 0.375;  // 가로 위치 (광고주 표 빈 박스 영역)
+                        const sigY = imgPage2.height * 0.868; // 세로 위치 (표 내부 빈 박스 중앙)
 
                         tempCtx.drawImage(imgSig, sigX, sigY, sigWidth, sigHeight);
                         resolve(tempCanvas.toDataURL('image/jpeg', 0.9));
