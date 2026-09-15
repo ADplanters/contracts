@@ -1,0 +1,12 @@
+{
+  "name": "adplanters-contract-api",
+  "version": "1.0.0",
+  "description": "Vercel Backend API for ADplanters Contracts",
+  "type": "module",
+  "scripts": {
+    "start": "node api/contracts.js"
+  },
+  "dependencies": {
+    "nodemailer": "^6.9.13"
+  }
+}
