@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>애드플랜터스 전자계약 시스템</title>
+    <!-- 접속 시 첫번째 계약 업체(Noah_Universe_Company)로 자동 리다이렉트 -->
+    <meta http-equiv="refresh" content="0; url=./Noah_Universe_Company/">
+    <script>
+        // 자바스크립트 기반 즉시 이동 처리
+        window.location.href = "./Noah_Universe_Company/";
+    </script>
+    <style>
+        body {
+            font-family: 'Apple SD Gothic Neo', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f8fafc;
+            color: #334155;
+        }
+        .loading-container {
+            text-align: center;
+        }
+        .spinner {
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #2563eb;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <p>계약서 페이지로 이동 중입니다...</p>
+        <p style="font-size: 13px; color: #64748b;">자동으로 이동하지 않을 경우 <a href="./Noah_Universe_Company/" style="color: #2563eb;">여기</a>를 클릭하세요.</p>
+    </div>
+</body>
+</html>
