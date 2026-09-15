@@ -79,13 +79,20 @@
                     <span class="text-base font-medium">위 계약 체결 및 효력 안내에 동의하며 본 계약을 체결합니다.</span>
                 </label>
 
-                <!-- 서명 캔버스 영역 -->
+                <!-- 서명 캔버스 및 인감 도장 업로드 영역 -->
                 <div class="space-y-2">
                     <div class="flex justify-between items-end">
-                        <label class="font-semibold block">서명 (마우스 또는 터치로 그려주세요) <span class="text-red-500">*</span></label>
-                        <button type="button" id="clearSignatureBtn" class="text-sm text-gray-500 hover:text-red-500 underline">
-                            지우기
-                        </button>
+                        <label class="font-semibold block">서명 또는 도장 (그리기 또는 이미지 업로드) <span class="text-red-500">*</span></label>
+                        <div class="flex items-center gap-3">
+                            <!-- 숨겨진 파일 인풋 및 도장 업로드 버튼 -->
+                            <input type="file" id="sealInput" accept="image/*" class="hidden">
+                            <button type="button" id="uploadSealBtn" class="text-sm text-blue-600 hover:text-blue-800 underline font-semibold">
+                                📷 도장 이미지 업로드
+                            </button>
+                            <button type="button" id="clearSignatureBtn" class="text-sm text-gray-500 hover:text-red-500 underline">
+                                지우기
+                            </button>
+                        </div>
                     </div>
                     <div class="border-2 border-gray-300 rounded-lg overflow-hidden bg-white">
                         <canvas id="signaturePad" class="w-full bg-white"></canvas>
@@ -113,6 +120,8 @@
         const clearBtn = document.getElementById('clearSignatureBtn');
         const submitBtn = document.getElementById('submitBtn');
         const emailInput = document.getElementById('customerEmail'); 
+        const sealInput = document.getElementById('sealInput');
+        const uploadSealBtn = document.getElementById('uploadSealBtn');
         
         let isDrawing = false;
         let hasSignature = false;
@@ -125,7 +134,7 @@
             canvas.height = 200;
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            // 서명 선 굵기 보정: 3px -> 5px로 선명도 향상
+            // 서명 선 굵기: 5px 선명도 유지
             ctx.lineWidth = 5;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
@@ -135,6 +144,7 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
+        // PC 마우스 드로잉
         canvas.addEventListener('mousedown', (e) => {
             isDrawing = true;
             [lastX, lastY] = [e.offsetX, e.offsetY];
@@ -143,6 +153,7 @@
         canvas.addEventListener('mouseup', () => isDrawing = false);
         canvas.addEventListener('mouseout', () => isDrawing = false);
 
+        // 모바일 터치 드로잉
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             const rect = canvas.getBoundingClientRect();
@@ -182,9 +193,48 @@
             ctx.stroke();
         }
 
+        // 캔버스 초기화
         clearBtn.addEventListener('click', () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            sealInput.value = ''; // 파일 인풋 초기화
             hasSignature = false;
+        });
+
+        // [신규 로직] 도장 이미지 파일 업로드 처리
+        uploadSealBtn.addEventListener('click', () => sealInput.click());
+
+        sealInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // 캔버스 크기에 맞춰 도장 비율 유지 렌더링
+                    const maxDim = Math.min(canvas.width, canvas.height) * 0.85;
+                    let drawW = img.width;
+                    let drawH = img.height;
+                    
+                    if (drawW > drawH) {
+                        drawH = (maxDim / drawW) * drawH;
+                        drawW = maxDim;
+                    } else {
+                        drawW = (maxDim / drawH) * drawW;
+                        drawH = maxDim;
+                    }
+                    
+                    const drawX = (canvas.width - drawW) / 2;
+                    const drawY = (canvas.height - drawH) / 2;
+
+                    ctx.drawImage(img, drawX, drawY, drawW, drawH);
+                    hasSignature = true;
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
         });
 
         function validateEmail(email) {
@@ -192,6 +242,7 @@
             return re.test(email);
         }
 
+        // 이미지 확대 모달 처리
         const imageModal = document.getElementById('imageModal');
         const modalImage = document.getElementById('modalImage');
         const closeModalBtn = document.getElementById('closeModalBtn');
@@ -223,9 +274,9 @@
         }
 
         /**
-         * [크기 및 위치 정밀 보정]
-         * - 서명 비율을 11%로 늘려 눈에 잘 보이게 보정
-         * - X, Y 좌표는 확정된 위치 유지
+         * [크기 및 좌표 확정]
+         * - 서명/도장 크기: 11% (선명함 유지)
+         * - 광고주 서명란 위치: X: 0.365, Y: 0.845 (박스 정중앙 안착)
          */
         function createSignedContractPage2(page2Url, signatureBase64) {
             return new Promise((resolve, reject) => {
@@ -240,14 +291,12 @@
                     // 1. 2페이지 계약서 원본 배경 그리기
                     tempCtx.drawImage(imgPage2, 0, 0);
 
-                    // 2. 투명 서명을 선명하고 가독성 높게 합성
+                    // 2. 서명/도장 투명 레이어 합성
                     const imgSig = new Image();
                     imgSig.onload = () => {
-                        // 서명 크기를 0.09에서 0.11로 확대하여 선명도 증가
                         const sigWidth = imgPage2.width * 0.11; 
                         const sigHeight = sigWidth * (canvas.height / canvas.width);
                         
-                        // 확정된 박스 중앙 좌표 적용 (X: 0.365, Y: 0.845)
                         const sigX = imgPage2.width * 0.365; 
                         const sigY = imgPage2.height * 0.845;
 
@@ -276,7 +325,7 @@
                 return;
             }
             if (!hasSignature) {
-                alert('서명을 진행해 주세요.');
+                alert('서명을 그리거나 도장 이미지를 업로드해 주세요.');
                 return;
             }
 
