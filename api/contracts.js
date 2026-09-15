@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 
 export default async function handler(req, res) {
-    // 1. CORS 보안 헤더 설정 (contract.adplanters.com 도메인의 통신만 허용)
+    // 1. CORS 보안 헤더 설정 (contract.adplanters.com 프론트엔드 출처만 허용)
     const allowedOrigin = 'https://contract.adplanters.com';
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
@@ -13,21 +13,20 @@ export default async function handler(req, res) {
         return res.status(200).end();
     }
 
-    // POST 요청 외 다른 메서드는 차단
+    // POST 이외의 요청 메서드 차단
     if (req.method !== 'POST') {
         return res.status(405).json({ message: '허용되지 않은 메서드입니다. POST 방식을 사용하세요.' });
     }
 
     try {
-        // 2. 프론트엔드에서 전송한 데이터 파싱
+        // 2. 프론트엔드 페이로드 데이터 추출
         const { contractPages, customerEmail, agreed, signatureImage, submittedAt } = req.body;
 
-        // 필수 데이터 유효성 검증
         if (!customerEmail || !signatureImage) {
             return res.status(400).json({ message: '필수 데이터(이메일 주소 또는 서명 이미지)가 누락되었습니다.' });
         }
 
-        // 3. Nodemailer 전송 트랜스포터 객체 생성 (Vercel 환경 변수 사용)
+        // 3. Nodemailer 전송 객체 생성 (Vercel 환경 변수 바인딩)
         const transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST || 'smtp.gmail.com',
             port: Number(process.env.SMTP_PORT) || 587,
@@ -38,11 +37,11 @@ export default async function handler(req, res) {
             }
         });
 
-        // 4. 발송할 이메일 메일 템플릿 및 첨부파일 구성
+        // 4. 발송 이메일 템플릿 및 첨부 서명 파일 구성
         const mailOptions = {
             from: `"애드플랜터스" <${process.env.SMTP_USER}>`,
             to: customerEmail,
-            bcc: process.env.SMTP_USER, // 본사 메일 계정으로 사본 자동 동시 발송
+            bcc: process.env.SMTP_USER, // 본사 메일 계정으로 사본 자동 발송
             subject: '[애드플랜터스] 전자계약서 서명이 완료되었습니다.',
             html: `
                 <div style="font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
@@ -74,7 +73,7 @@ export default async function handler(req, res) {
             ]
         };
 
-        // 5. 이메일 실제 발송 실행
+        // 5. 이메일 실제 발송 수행
         await transporter.sendMail(mailOptions);
 
         return res.status(200).json({ success: true, message: '계약 완료 및 사본 이메일 발송이 완료되었습니다.' });
