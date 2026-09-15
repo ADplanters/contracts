@@ -93,7 +93,7 @@
                 </div>
             </section>
 
-            <!-- 제출 버튼 (요청 문구 변경: 계약 서명 완료) -->
+            <!-- 제출 버튼 -->
             <button id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg py-4 rounded-lg shadow-md transition duration-200">
                 계약 서명 완료
             </button>
@@ -222,7 +222,7 @@
         }
 
         /**
-         * [위치 재조정] 서명을 광고주 상호명/대표자 오른쪽 빈 박스 중앙으로 하향 배치 (Y: 0.915)
+         * [좌표 정밀 수정] Y축 위치를 0.883으로 조정하여 광고주 서명 박스 내부 중앙에 완벽 배치
          */
         function createSignedContractPage2(page2Url, signatureBase64) {
             return new Promise((resolve, reject) => {
@@ -237,15 +237,15 @@
                     // 1. 2페이지 계약서 원본 배경 그리기
                     tempCtx.drawImage(imgPage2, 0, 0);
 
-                    // 2. 투명 서명 이미지를 광고주 서명란 박스 내부에 정확히 안착
+                    // 2. 서명 이미지를 표 내부 빈 박스 중앙에 정확히 배치
                     const imgSig = new Image();
                     imgSig.onload = () => {
                         const sigWidth = imgPage2.width * 0.10; // 박스 크기에 맞춘 서명 너비 (10%)
                         const sigHeight = sigWidth * (canvas.height / canvas.width);
                         
-                        // X, Y 좌표 보정: 표 내 하단 광고주 박스 안으로 완벽 이동
+                        // Y축 좌표를 0.883으로 정밀 배치 (0.868과 0.915의 중간 정중앙 지점)
                         const sigX = imgPage2.width * 0.368; 
-                        const sigY = imgPage2.height * 0.915;
+                        const sigY = imgPage2.height * 0.883;
 
                         tempCtx.drawImage(imgSig, sigX, sigY, sigWidth, sigHeight);
                         resolve(tempCanvas.toDataURL('image/jpeg', 0.9));
@@ -276,7 +276,6 @@
                 return;
             }
 
-            // 요청 문구 변경: 전송 중 상태 텍스트를 "계약 체결 중..."으로 변경
             submitBtn.disabled = true;
             submitBtn.innerText = "계약 체결 중...";
             submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
@@ -318,7 +317,6 @@
                 console.error('Error submitting contract:', error);
                 alert('전송 중 오류가 발생했습니다: ' + error.message);
             } finally {
-                // 복원 문구 변경: "계약 서명 완료"
                 submitBtn.disabled = false;
                 submitBtn.innerText = "계약 서명 완료";
                 submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
