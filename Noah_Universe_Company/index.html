@@ -24,7 +24,7 @@
 
         <div class="p-6 space-y-8">
             
-            <!-- [수정됨] 계약 체결 및 효력 안내 영역 -->
+            <!-- 계약 체결 및 효력 안내 영역 -->
             <section class="bg-blue-50 border border-blue-200 rounded-lg p-5">
                 <h2 class="text-lg font-bold text-blue-900 mb-2">[계약 체결 및 효력 안내]</h2>
                 <p class="text-sm leading-relaxed text-gray-700">
@@ -39,8 +39,10 @@
             <section class="space-y-4 border border-gray-300 p-2 bg-gray-50 rounded-lg">
                 <h3 class="font-semibold px-2 pt-2">계약서 내용 확인 <span class="text-xs text-gray-500 font-normal ml-2">(이미지를 클릭하면 확대됩니다)</span></h3>
                 
-                <img src="https://rawcdn.githack.com/ADplanters/public/acb3ccee14abb198bf145dbd8f50cab2a98da332/Noah&AP%20contract_001.jpg?raw=true" alt="계약서 1페이지" class="contract-img w-full h-auto border shadow-sm cursor-zoom-in hover:opacity-90 transition-opacity">
-                <img src="https://rawcdn.githack.com/ADplanters/public/acb3ccee14abb198bf145dbd8f50cab2a98da332/Noah&AP%20contract_002.jpg?raw=true" alt="계약서 2페이지" class="contract-img w-full h-auto border shadow-sm cursor-zoom-in hover:opacity-90 transition-opacity">
+                <!-- [변경됨] 계약서 1페이지 새로운 이미지 URL 적용 -->
+                <img src="https://rawcdn.githack.com/ADplanters/public/f41e9fafa62fa6823274d02b21e458a7f256d7d4/Noah&AP%20contract_001_v2.jpg?raw=true" alt="계약서 1페이지" class="contract-img w-full h-auto border shadow-sm cursor-zoom-in hover:opacity-90 transition-opacity">
+                <!-- [변경됨] 계약서 2페이지 새로운 이미지 URL 적용 -->
+                <img src="https://rawcdn.githack.com/ADplanters/public/f41e9fafa62fa6823274d02b21e458a7f256d7d4/Noah&AP%20contract_002_v2.jpg?raw=true" alt="계약서 2페이지" class="contract-img w-full h-auto border shadow-sm cursor-zoom-in hover:opacity-90 transition-opacity">
             </section>
 
             <!-- 서명 및 동의 영역 -->
@@ -52,6 +54,7 @@
                         계약서 사본 수신 이메일 <span class="text-red-500">*</span>
                     </label>
                     <input type="email" id="customerEmail" placeholder="example@email.com" class="w-full border border-gray-300 rounded-md p-3 focus:ring-blue-500 focus:border-blue-500 outline-none transition" required>
+                    <!-- [변경됨] 발신자 텍스트 수정 (애드플랜터스.co) -->
                     <p class="text-sm text-gray-500 mt-2">입력하신 이메일로 서명 완료된 계약서 사본이 발송됩니다. (발신자: 애드플랜터스.co)</p>
                 </div>
 
@@ -237,8 +240,9 @@
             // payload 데이터 구성
             const payload = {
                 contractPages: [
-                    "https://rawcdn.githack.com/ADplanters/public/acb3ccee14abb198bf145dbd8f50cab2a98da332/Noah&AP%20contract_001.jpg?raw=true",
-                    "https://rawcdn.githack.com/ADplanters/public/acb3ccee14abb198bf145dbd8f50cab2a98da332/Noah&AP%20contract_002.jpg?raw=true"
+                    // [변경됨] JSON payload 내부의 이미지 URL도 동일하게 업데이트
+                    "https://rawcdn.githack.com/ADplanters/public/f41e9fafa62fa6823274d02b21e458a7f256d7d4/Noah&AP%20contract_001_v2.jpg?raw=true",
+                    "https://rawcdn.githack.com/ADplanters/public/f41e9fafa62fa6823274d02b21e458a7f256d7d4/Noah&AP%20contract_002_v2.jpg?raw=true"
                 ],
                 customerEmail: customerEmailValue,
                 agreed: isAgreed,
