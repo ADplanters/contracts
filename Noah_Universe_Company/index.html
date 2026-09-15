@@ -84,7 +84,6 @@
                     <div class="flex justify-between items-end">
                         <label class="font-semibold block">서명 또는 도장 (그리기 또는 이미지 업로드) <span class="text-red-500">*</span></label>
                         <div class="flex items-center gap-3">
-                            <!-- 숨겨진 파일 인풋 및 도장 업로드 버튼 -->
                             <input type="file" id="sealInput" accept="image/*" class="hidden">
                             <button type="button" id="uploadSealBtn" class="text-sm text-blue-600 hover:text-blue-800 underline font-semibold">
                                 📷 도장 이미지 업로드
@@ -134,7 +133,6 @@
             canvas.height = 200;
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            // 서명 선 굵기: 5px 선명도 유지
             ctx.lineWidth = 5;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
@@ -196,11 +194,11 @@
         // 캔버스 초기화
         clearBtn.addEventListener('click', () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            sealInput.value = ''; // 파일 인풋 초기화
+            sealInput.value = '';
             hasSignature = false;
         });
 
-        // [신규 로직] 도장 이미지 파일 업로드 처리
+        // 도장 이미지 파일 업로드 처리
         uploadSealBtn.addEventListener('click', () => sealInput.click());
 
         sealInput.addEventListener('change', (e) => {
@@ -213,8 +211,7 @@
                 img.onload = () => {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     
-                    // 캔버스 크기에 맞춰 도장 비율 유지 렌더링
-                    const maxDim = Math.min(canvas.width, canvas.height) * 0.85;
+                    const maxDim = Math.min(canvas.width, canvas.height) * 0.90;
                     let drawW = img.width;
                     let drawH = img.height;
                     
@@ -274,9 +271,9 @@
         }
 
         /**
-         * [크기 및 좌표 확정]
-         * - 서명/도장 크기: 11% (선명함 유지)
-         * - 광고주 서명란 위치: X: 0.365, Y: 0.845 (박스 정중앙 안착)
+         * [크기 2배 확대 및 위치 중앙 배치 보정]
+         * - 서명/도장 비율: 기존 11% -> 20%로 약 2배 확대
+         * - 확대된 크기에 맞추어 좌표 보정 (X: 0.32, Y: 0.825)
          */
         function createSignedContractPage2(page2Url, signatureBase64) {
             return new Promise((resolve, reject) => {
@@ -291,14 +288,16 @@
                     // 1. 2페이지 계약서 원본 배경 그리기
                     tempCtx.drawImage(imgPage2, 0, 0);
 
-                    // 2. 서명/도장 투명 레이어 합성
+                    // 2. 2배 확대된 도장/서명 레이어 합성
                     const imgSig = new Image();
                     imgSig.onload = () => {
-                        const sigWidth = imgPage2.width * 0.11; 
+                        // 스케일을 20%로 설정 (기존 대비 2배 확대)
+                        const sigWidth = imgPage2.width * 0.20; 
                         const sigHeight = sigWidth * (canvas.height / canvas.width);
                         
-                        const sigX = imgPage2.width * 0.365; 
-                        const sigY = imgPage2.height * 0.845;
+                        // 2배 커진 크기에 맞게 박스 정중앙 안착 좌표 보정
+                        const sigX = imgPage2.width * 0.32; 
+                        const sigY = imgPage2.height * 0.825;
 
                         tempCtx.drawImage(imgSig, sigX, sigY, sigWidth, sigHeight);
                         resolve(tempCanvas.toDataURL('image/jpeg', 0.92));

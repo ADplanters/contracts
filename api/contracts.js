@@ -34,7 +34,7 @@ export default async function handler(req, res) {
             }
         });
 
-        // 3. 첨부파일 목록 (투명 PNG 서명 원본 + 합성 완료된 2페이지 파일)
+        // 3. 첨부파일 목록
         const attachments = [
             {
                 filename: 'customer_signature.png',
