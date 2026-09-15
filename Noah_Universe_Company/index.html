@@ -93,9 +93,9 @@
                 </div>
             </section>
 
-            <!-- 제출 버튼 -->
+            <!-- 제출 버튼 (요청 문구 변경: 계약 서명 완료) -->
             <button id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg py-4 rounded-lg shadow-md transition duration-200">
-                계약 서명 완료 및 전송
+                계약 서명 완료
             </button>
         </div>
     </main>
@@ -222,7 +222,7 @@
         }
 
         /**
-         * [좌표 정밀 보정] 광고주 표 내부 빈 박스(상호명/대표자 오른쪽 빈 칸)에 서명을 정확히 맞추는 위치 계산
+         * [위치 재조정] 서명을 광고주 상호명/대표자 오른쪽 빈 박스 중앙으로 하향 배치 (Y: 0.915)
          */
         function createSignedContractPage2(page2Url, signatureBase64) {
             return new Promise((resolve, reject) => {
@@ -237,16 +237,15 @@
                     // 1. 2페이지 계약서 원본 배경 그리기
                     tempCtx.drawImage(imgPage2, 0, 0);
 
-                    // 2. 투명 서명을 표 내부 박스 위치로 합성
+                    // 2. 투명 서명 이미지를 광고주 서명란 박스 내부에 정확히 안착
                     const imgSig = new Image();
                     imgSig.onload = () => {
-                        // 박스 가로 너비에 맞게 크기 축소 (전체 이미지의 9%)
-                        const sigWidth = imgPage2.width * 0.09; 
+                        const sigWidth = imgPage2.width * 0.10; // 박스 크기에 맞춘 서명 너비 (10%)
                         const sigHeight = sigWidth * (canvas.height / canvas.width);
                         
-                        // Y축을 0.868로 조정하여 표 하단 서명란 박스 내부에 배치
-                        const sigX = imgPage2.width * 0.375;  // 가로 위치 (광고주 표 빈 박스 영역)
-                        const sigY = imgPage2.height * 0.868; // 세로 위치 (표 내부 빈 박스 중앙)
+                        // X, Y 좌표 보정: 표 내 하단 광고주 박스 안으로 완벽 이동
+                        const sigX = imgPage2.width * 0.368; 
+                        const sigY = imgPage2.height * 0.915;
 
                         tempCtx.drawImage(imgSig, sigX, sigY, sigWidth, sigHeight);
                         resolve(tempCanvas.toDataURL('image/jpeg', 0.9));
@@ -277,8 +276,9 @@
                 return;
             }
 
+            // 요청 문구 변경: 전송 중 상태 텍스트를 "계약 체결 중..."으로 변경
             submitBtn.disabled = true;
-            submitBtn.innerText = "서명 합성 및 전송 중...";
+            submitBtn.innerText = "계약 체결 중...";
             submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
 
             try {
@@ -318,8 +318,9 @@
                 console.error('Error submitting contract:', error);
                 alert('전송 중 오류가 발생했습니다: ' + error.message);
             } finally {
+                // 복원 문구 변경: "계약 서명 완료"
                 submitBtn.disabled = false;
-                submitBtn.innerText = "계약 서명 완료 및 전송";
+                submitBtn.innerText = "계약 서명 완료";
                 submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
         });
